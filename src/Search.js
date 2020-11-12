@@ -4,7 +4,21 @@ import request from 'superagent';
 export default class Search extends Component {
     state = {
         query: '',
-        movies: []
+        movies: [],
+        favorites: []
+    }
+
+    componentDidMount = async () => {
+        await this.fetchFavorites();
+    }
+
+    fetchFavorites = async () => {
+        const response = await request
+        .get(`${process.env.REACT_APP_BACK_END_URL}/api/favorites`)
+        .set('Authorization', this.props.token)
+
+    this.setState({ favorites: response.body });
+
     }
 
     handleSubmit = async e => {
@@ -16,10 +30,21 @@ export default class Search extends Component {
         this.setState({ movies: response.body.results });
     }
 
+    handleFavorite = async (movie) => {
+        const favorite = {
+            movie_api_id: movie.id,
+            title: movie.title
+        };
+
+        await request
+            .post(`${process.env.REACT_APP_BACK_END_URL}/api/favorites`)
+            .set('Authorization', this.props.token)
+            .send(favorite);
+        
+        await this.fetchFavorites();
+    }
+
     render() {
-        console.log('=============================\n')
-        console.log('|| this.state.movies', this.state.movies)
-        console.log('\n=============================')
         return (
             <div>
                 Search!
@@ -30,15 +55,20 @@ export default class Search extends Component {
                     <button>
                         Search!
                     </button>
-                        <ul>
-                            {
-                                !!this.state.movies.length && this.state.movies.map(movie => <li>
-                                    <div>{movie.title}</div>
-                                    <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}/>
-                                </li>) 
-                            }
-                        </ul>
                 </form>
+                    <ul>
+                        {
+                            !!this.state.movies.length && this.state.movies.map(movie => <li id={movie.id}>
+                                {
+                                    this.state.favorites.find(favorite => favorite.movie_api_id === movie.id)
+                                        ? <span>🐼</span>
+                                        : <span style={{ cursor: 'pointer' }} onClick={() => this.handleFavorite(movie)}>🍕</span>
+                                }
+                                <div>{movie.title}</div>
+                                <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}/>
+                            </li>) 
+                        }
+                    </ul>
             </div>
         )
     }

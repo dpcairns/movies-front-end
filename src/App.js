@@ -82,7 +82,7 @@ export default class App extends Component {
               exact 
               path='/search' 
               render={(routerProps) => 
-                  <Search {...routerProps} />
+                  <Search {...routerProps} token={this.state.token} />
                 } 
               />
             <PrivateRoute 
